@@ -100,6 +100,50 @@ const handleMint = async () => {
 - Added support for multiple encryption algorithms
 - Enhanced encryption progress indicators for better user experience
 
+### 4. Cross-Chain Transfer Component
+
+Location: `/Front_Endv2/src/screens/app/With3rdWeb/CrossChain.tsx`
+
+#### Component Organization
+The Qube Transfer functionality is integrated into the NftMinter component as the fourth tab, allowing users to transfer NFTs across different blockchain networks.
+
+#### Supported Networks
+The Cross-Chain transfer system now supports the following networks:
+- Polygon PoS (Amoy)
+- Avalanche (Fuji)
+- Polygon zkEVM (Cardano)
+- Arbitrum (Sepoila)
+- Aurora (Sepiola)
+
+#### Features
+- Intuitive network selection dropdowns
+- Bidirectional transfers between supported networks
+- Real-time validation of transfer requirements
+- Network fee estimation
+- Transfer status tracking
+
+#### User Interface
+- Clean and consistent design matching other tabs
+- Network swap functionality for quick source/destination switching
+- Clear error messaging and validation
+- Progress indicators for transfer status
+
+#### Implementation Details
+```typescript
+// Network selection state management
+const [fromChain, setFromChain] = useState('Polygon PoS (Amoy)')
+const [toChain, setToChain] = useState('Avalanche (Fuji)')
+
+// Network options
+const networkOptions = [
+  'Polygon PoS (Amoy)',
+  'Avalanche (Fuji)',
+  'Polygon zkEVM (Cardano)',
+  'Arbitrum (Sepoila)',
+  'Aurora (Sepiola)'
+]
+```
+
 ## Testing Checklist
 
 1. MetaMask Integration
