@@ -200,3 +200,10 @@ const networkOptions = [
 - Implemented automatic key rotation for improved security
 - Added support for multiple encryption algorithms
 - Enhanced encryption progress indicators for better user experience
+
+### Version 3.0.0 (2025-02-20)
+- Updated UI layout for better user experience
+- Changed main title from "Create DataQube" to "Create iQube"
+- Moved Qube Transfer tab to right side under Token Operations
+- Fixed encryption endpoints for AgentQube minting
+- Added persistent dev server configuration
