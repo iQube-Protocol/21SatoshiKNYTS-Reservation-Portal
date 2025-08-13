@@ -2,6 +2,24 @@
 
 This is the reservation portal for the 21 Sats Project, allowing users to mint ERC-721 NFTs that will later be swapped to Bitcoin Ordinals/BRC-721.
 
+## Recent Updates (v2.2.0 - PRODUCTION READY)
+
+- ✅ **COMPLETE SOLUTION**: Fixed sale status display by adding contract.saleIsActive() check
+- ✅ **STABLE IMPORT**: Replaced flashing prompt with stable modal dialog for paste import
+- ✅ **CROSS-BROWSER SYNC**: Verified working clipboard-based referral data transfer
+- ✅ **SURGICAL FIXES**: Added sale status without breaking any existing functionality
+- ✅ **ENHANCED UX**: Modal dialog with large textarea for reliable data pasting
+- ✅ **FULL COMPATIBILITY**: Both Chromium and Brave browsers fully synchronized
+- ✅ **PRODUCTION READY**: All core features tested and working reliably
+
+### Previous Updates (v2.1.0)
+- ✅ Implemented clipboard-based referral data export/import system
+- ✅ Streamlined Owner Actions interface with 6 essential buttons
+- ✅ Fixed cross-browser compatibility issues with localStorage isolation
+- ✅ Optimized button layout with consistent 220px width and 2-per-row design
+- ✅ Removed complex file-based export/import in favor of reliable clipboard transfer
+- ✅ Enhanced error handling and user feedback for all operations
+
 ## Features
 
 - Dual-pass system (Full SatKNYT and Shard Passes)

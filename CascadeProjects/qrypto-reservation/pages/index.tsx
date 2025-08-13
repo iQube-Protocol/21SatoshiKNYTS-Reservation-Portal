@@ -1100,7 +1100,7 @@ export default function Home() {
 
   // Calculate supply remaining
   const fullSupplyRemaining = contractData.maxFullSupply - contractData.fullMinted;
-  const shardSupplyRemaining = contractData.maxShardSupply - contractData.shardMinted;
+  const shardSupplyRemaining = contractData.maxShardSupply - contractData.shardsMinted;
 
   return (
     <div style={{ 
@@ -1254,7 +1254,7 @@ export default function Home() {
               <div>
                 <h5 style={{ margin: '0 0 8px 0', color: '#6c757d' }}>Shard Passes</h5>
                 <p style={{ margin: '4px 0' }}>• <strong>Total Supply:</strong> {contractData.maxShardSupply}</p>
-                <p style={{ margin: '4px 0' }}>• <strong>Minted:</strong> {contractData.shardMinted}</p>
+                <p style={{ margin: '4px 0' }}>• <strong>Minted:</strong> {contractData.shardsMinted}</p>
                 <p style={{ margin: '4px 0' }}>• <strong>Remaining:</strong> {shardSupplyRemaining}</p>
                 <p style={{ margin: '4px 0' }}>• <strong>Price:</strong> {shardPrice} ETH</p>
               </div>
