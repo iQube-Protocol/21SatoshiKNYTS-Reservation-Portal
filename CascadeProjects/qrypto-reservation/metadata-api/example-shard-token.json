@@ -1,0 +1,20 @@
+{
+  "name": "Satoshi KNYT Shard #19",
+  "description": "Fractional ownership shard of Satoshi KNYT, part of the exclusive collection of 42 Satoshi KNYT Shards.",
+  "image": "https://api.21sats.com/images/shard/19.png",
+  "external_url": "https://21sats.com/token/19",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Shard"
+    },
+    {
+      "trait_type": "Shard Type",
+      "value": "Sale"
+    },
+    {
+      "trait_type": "Parent KNYT",
+      "value": 19
+    }
+  ]
+}

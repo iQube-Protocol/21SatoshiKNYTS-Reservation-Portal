@@ -1,0 +1,872 @@
+import { ethers } from 'ethers';
+import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+
+// Contract ABI for the corrected 21 Sats KNYT system
+const KNYT_CONTRACT_ABI = [
+  {
+    "inputs": [],
+    "name": "MAX_FULL_SUPPLY",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_SHARD_SUPPLY",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REFERRAL_SHARD_SUPPLY",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "COMMUNITY_SHARD_SUPPLY",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fullMinted",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardMinted",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "referralShardsMinted",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fullPrice",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "shardPrice",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "quantity", "type": "uint256"}],
+    "name": "mintFull",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "quantity", "type": "uint256"},
+      {"internalType": "address", "name": "referrer", "type": "address"}
+    ],
+    "name": "mintFullWithReferrer",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "quantity", "type": "uint256"}],
+    "name": "mintShard",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
+    "name": "getReferralStats",
+    "outputs": [
+      {"internalType": "uint256", "name": "totalReferrals", "type": "uint256"},
+      {"internalType": "address[]", "name": "referredAddresses", "type": "address[]"},
+      {"internalType": "uint256", "name": "availableReferralShards", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
+    "name": "getReferralStats",
+    "outputs": [
+      {"internalType": "uint256", "name": "totalReferrals", "type": "uint256"},
+      {"internalType": "address[]", "name": "referredAddresses", "type": "address[]"},
+      {"internalType": "uint256", "name": "availableReferralShards", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "saleIsActive",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+
+
+export default function Home() {
+  // Direct MetaMask wallet state
+  const [isConnected, setIsConnected] = useState(false);
+  const [address, setAddress] = useState<string>('');
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [contract, setContract] = useState<ethers.Contract | null>(null);
+  const router = useRouter();
+  const [passType, setPassType] = useState<'full' | 'shard'>('full');
+  const [referrerAddress, setReferrerAddress] = useState('');
+  const [email, setEmail] = useState('');
+  
+  // Modal states
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [showReferralProgramModal, setShowReferralProgramModal] = useState(false);
+  const [showRefereeDetailsModal, setShowRefereeDetailsModal] = useState(false);
+
+  // Contract data state
+  const [maxFullSupply, setMaxFullSupply] = useState<number>(18);
+  const [maxShardSupply, setMaxShardSupply] = useState<number>(21);
+  const [fullMinted, setFullMinted] = useState<number>(0);
+  const [shardMinted, setShardMinted] = useState<number>(0);
+  const [referralShardsMinted, setReferralShardsMinted] = useState<number>(0);
+  const [saleIsActive, setSaleIsActive] = useState<boolean>(false);
+  const [fullPriceData, setFullPriceData] = useState<bigint | null>(null);
+  const [shardPriceData, setShardPriceData] = useState<bigint | null>(null);
+  const [referralStatsData, setReferralStatsData] = useState<any>(null);
+  const [referralStatsError, setReferralStatsError] = useState<any>(null);
+
+  // MetaMask wallet connection functions
+  const connectWallet = async () => {
+    try {
+      // Check if we're in browser environment
+      if (typeof window === 'undefined') {
+        console.log('Not in browser environment');
+        return;
+      }
+
+      // Check for MetaMask
+      if (typeof (window as any).ethereum === 'undefined') {
+        console.error('MetaMask not found');
+        // Don't show alert immediately, just log
+        return;
+      }
+
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      
+      // Request account access
+      const accounts = await provider.send('eth_requestAccounts', []);
+      if (!accounts || accounts.length === 0) {
+        console.error('No accounts returned from MetaMask');
+        return;
+      }
+
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      
+      setProvider(provider);
+      setAddress(address);
+      setIsConnected(true);
+      
+      // Initialize contract with signer
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!,
+        KNYT_CONTRACT_ABI,
+        signer
+      );
+      setContract(contract);
+      
+      console.log('✅ Wallet connected successfully:', address);
+      
+    } catch (error: any) {
+      console.error('❌ Error connecting wallet:', error);
+      
+      // Handle specific error types
+      if (error.code === 4001) {
+        console.log('User rejected the connection request');
+      } else if (error.code === -32002) {
+        console.log('Connection request already pending');
+      } else {
+        console.error('Unexpected wallet connection error:', error.message);
+      }
+    }
+  };
+
+  const disconnectWallet = () => {
+    setProvider(null);
+    setContract(null);
+    setAddress('');
+    setIsConnected(false);
+    console.log('✅ Wallet disconnected');
+  };
+
+  // Load contract data
+  const loadContractData = async () => {
+    // Only run in browser environment
+    if (typeof window === 'undefined') {
+      console.log('ℹ️ Skipping contract data load (not in browser)');
+      return;
+    }
+
+    try {
+      // Verify contract address exists
+      if (!process.env.NEXT_PUBLIC_CONTRACT_ADDRESS) {
+        console.error('❌ Contract address not found in environment');
+        return;
+      }
+
+      if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
+        console.error('❌ Alchemy API key not found in environment');
+        return;
+      }
+
+      console.log('🔄 Loading contract data from:', process.env.NEXT_PUBLIC_CONTRACT_ADDRESS);
+      
+      // Create read-only provider for contract data
+      const readOnlyProvider = new ethers.JsonRpcProvider(`https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`);
+      const readOnlyContract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!,
+        KNYT_CONTRACT_ABI,
+        readOnlyProvider
+      );
+
+      // Test contract connection first
+      try {
+        const testCall = await readOnlyContract.MAX_FULL_SUPPLY();
+        console.log('✅ Contract connection test successful:', testCall.toString());
+      } catch (testError) {
+        console.error('❌ Contract connection test failed:', testError);
+        throw new Error('Contract not accessible at the specified address');
+      }
+
+      const [
+        maxFullSupply,
+        maxShardSupply,
+        referralShardSupply,
+        fullMinted,
+        shardMinted,
+        referralShardsMinted,
+        saleIsActive,
+        fullPrice,
+        shardPrice
+      ] = await Promise.all([
+        readOnlyContract.MAX_FULL_SUPPLY(),
+        readOnlyContract.MAX_SHARD_SUPPLY(),
+        readOnlyContract.REFERRAL_SHARD_SUPPLY(),
+        readOnlyContract.fullMinted(),
+        readOnlyContract.shardMinted(),
+        readOnlyContract.referralShardsMinted(),
+        readOnlyContract.saleIsActive(),
+        readOnlyContract.fullPrice(),
+        readOnlyContract.shardPrice()
+      ]);
+      
+      setMaxFullSupply(Number(maxFullSupply));
+      setMaxShardSupply(Number(maxShardSupply));
+      setFullMinted(Number(fullMinted));
+      setShardMinted(Number(shardMinted));
+      setReferralShardsMinted(Number(referralShardsMinted));
+      setSaleIsActive(saleIsActive);
+      setFullPriceData(fullPrice);
+      setShardPriceData(shardPrice);
+      
+      console.log('✅ Contract data loaded successfully:', {
+        maxFullSupply: Number(maxFullSupply),
+        maxShardSupply: Number(maxShardSupply),
+        fullMinted: Number(fullMinted),
+        shardMinted: Number(shardMinted),
+        referralShardsMinted: Number(referralShardsMinted),
+        saleIsActive,
+        fullPrice: ethers.formatEther(fullPrice),
+        shardPrice: ethers.formatEther(shardPrice)
+      });
+      
+      // Try to load referral stats (may fail for new users)
+      if (address) {
+        try {
+          const refStats = await readOnlyContract.getReferralStats(address);
+          setReferralStatsData(refStats);
+          setReferralStatsError(null);
+        } catch (error) {
+          console.error('getReferralStats error (expected for new users):', error);
+          setReferralStatsError(error);
+          // Set default values for users with no referral history
+          setReferralStatsData([0, [], 0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading contract data:', error);
+    }
+  };
+
+  // Parse corrected KNYT system data
+  const maxFullSupplyNum = maxFullSupply;
+  const maxShardSupplyNum = maxShardSupply;
+  const fullMintedNum = fullMinted;
+  const shardMintedNum = shardMinted;
+  const referralShardsMintedNum = referralShardsMinted;
+
+  // Load contract data on mount and when address changes
+  useEffect(() => {
+    loadContractData();
+  }, [address]);
+
+  // Load contract data immediately on mount (independent of wallet connection)
+  useEffect(() => {
+    loadContractData();
+  }, []);
+
+  // Check for existing wallet connection on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      // Only run in browser environment
+      if (typeof window === 'undefined') return;
+      
+      if (typeof (window as any).ethereum !== 'undefined') {
+        try {
+          const provider = new ethers.BrowserProvider((window as any).ethereum);
+          const accounts = await provider.listAccounts();
+          if (accounts.length > 0) {
+            const signer = await provider.getSigner();
+            const address = await signer.getAddress();
+            
+            setProvider(provider);
+            setAddress(address);
+            setIsConnected(true);
+            
+            const contract = new ethers.Contract(
+              process.env.NEXT_PUBLIC_CONTRACT_ADDRESS!,
+              KNYT_CONTRACT_ABI,
+              signer
+            );
+            setContract(contract);
+            
+            console.log('✅ Existing wallet connection restored:', address);
+          }
+        } catch (error) {
+          console.log('ℹ️ No existing wallet connection found');
+        }
+      } else {
+        console.log('ℹ️ MetaMask not detected');
+      }
+    };
+    
+    // Add small delay to ensure window is fully loaded
+    const timer = setTimeout(checkConnection, 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Calculate remaining supply (18 Full KNYTs for sale, 21 Shards for sale)
+  const fullSupplyRemaining = maxFullSupplyNum - fullMintedNum;
+  const shardSupplyRemaining = maxShardSupplyNum - shardMintedNum;
+  
+  // Parse prices - using deployed contract values
+  const fullPrice = fullPriceData ? Number(fullPriceData) / 1e18 : 0.01; // Contract expects: 0.01 ETH
+  const shardPrice = shardPriceData ? Number(shardPriceData) / 1e18 : 0.001; // Contract expects: 0.001 ETH
+  
+  console.log('KNYT System Data:', {
+    maxFullSupply: maxFullSupplyNum,
+    maxShardSupply: maxShardSupplyNum,
+    fullMinted: fullMintedNum,
+    shardMinted: shardMintedNum,
+    referralShardsMinted: referralShardsMintedNum,
+    fullSupplyRemaining,
+    shardSupplyRemaining,
+    fullPrice,
+    shardPrice
+  });
+
+  // Debug referral stats error
+  useEffect(() => {
+    if (referralStatsError) {
+      console.error('getReferralStats error:', referralStatsError);
+      console.error('Error details:', {
+        message: referralStatsError.message,
+        cause: referralStatsError.cause,
+      let tokenId = 'Unknown';
+      try {
+        const transferEvent = receipt.logs.find((log: any) => 
+          log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+        );
+        if (transferEvent) {
+          tokenId = parseInt(transferEvent.topics[3], 16).toString();
+        }
+      } catch (e) {
+        console.log('Could not extract token ID:', e);
+      }
+
+      // Update referral record
+      const updatedRecord = {
+        ...referralRecord,
+        status: 'reward_sent',
+        processed: true,
+        referralTxHash: referralTx.hash,
+        referralTokenId: tokenId,
+        processedDate: new Date().toISOString(),
+        ownerNotes: `Processed by owner - Token ID: ${tokenId}`
+      };
+
+      // Update localStorage
+      const allReferrals = JSON.parse(localStorage.getItem('21sats_referrals') || '[]');
+      const updatedReferrals = allReferrals.map((ref: any) => 
+        ref.id === referralRecord.id ? updatedRecord : ref
+      );
+      localStorage.setItem('21sats_referrals', JSON.stringify(updatedReferrals));
+
+      setProcessingStatus(`✅ Success! Token ID: ${tokenId}`);
+      
+      // Reload pending referrals
+      setTimeout(() => {
+        loadPendingReferrals();
+        setProcessingStatus('');
+      }, 3000);
+
+    } catch (error: any) {
+      console.error('Error processing referral:', error);
+      setProcessingStatus(`❌ Error: ${error.message}`);
+      
+      // Update record with error
+      const failedRecord = {
+        ...referralRecord,
+        status: 'failed',
+        processed: true,
+        error: error.message,
+        processedDate: new Date().toISOString(),
+        ownerNotes: `Failed: ${error.message}`
+      };
+
+      const allReferrals = JSON.parse(localStorage.getItem('21sats_referrals') || '[]');
+      const updatedReferrals = allReferrals.map((ref: any) => 
+        ref.id === referralRecord.id ? failedRecord : ref
+      );
+      localStorage.setItem('21sats_referrals', JSON.stringify(updatedReferrals));
+
+      setTimeout(() => {
+        loadPendingReferrals();
+        setProcessingStatus('');
+      }, 5000);
+    }
+
+    setIsProcessing(false);
+  };
+
+  const processAllReferrals = async () => {
+    if (pendingReferrals.length === 0) return;
+    
+    setIsProcessing(true);
+    setProcessingStatus('Processing all pending referrals...');
+
+    for (let i = 0; i < pendingReferrals.length; i++) {
+      const referral = pendingReferrals[i];
+      setProcessingStatus(`Processing ${i + 1}/${pendingReferrals.length}: ${referral.referrer.slice(0, 6)}...`);
+      
+      try {
+        await processReferralReward(referral);
+        // Wait 2 seconds between transactions to avoid rate limiting
+        if (i < pendingReferrals.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      } catch (error) {
+        console.error(`Failed to process referral ${i + 1}:`, error);
+        // Continue with next referral even if one fails
+      }
+    }
+
+    setProcessingStatus('✅ Batch processing completed!');
+    setTimeout(() => {
+      setProcessingStatus('');
+      loadPendingReferrals();
+    }, 3000);
+    
+    setIsProcessing(false);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: '1rem' }}>
+        <strong>Pending Referral Rewards: {pendingReferrals.length}</strong>
+        {processingStatus && (
+          <div style={{ 
+            marginTop: '0.5rem', 
+            padding: '0.5rem', 
+            backgroundColor: '#e3f2fd', 
+            borderRadius: '4px',
+            fontSize: '0.9rem'
+          }}>
+            {processingStatus}
+            <h2>Connect Your Wallet</h2>
+            <p>Please connect your MetaMask wallet to continue.</p>
+            <button 
+              onClick={connectWallet} 
+              className="btn-primary"
+              style={{ width: '100%' }}
+            >
+              Connect MetaMask
+            </button>
+          </>
+        ) : (
+          <>
+            <h2>Wallet Connected</h2>
+            <p>Address: <code className="wallet-address">{address}</code></p>
+            <button 
+              onClick={disconnectWallet} 
+              className="btn-secondary"
+              style={{ marginTop: '1rem' }}
+            >
+              Disconnect Wallet
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Availability Section */}
+      <div className="section" style={{ cursor: 'pointer' }} onClick={() => setShowAvailabilityModal(true)}>
+        <h2>Availability</h2>
+        <p><strong>Full Passes:</strong> {fullSupplyRemaining} available</p>
+        <p><strong>Shard Passes:</strong> {shardSupplyRemaining} available</p>
+        <p><strong>Full Pass Price:</strong> {fullPrice.toFixed(4)} ETH</p>
+        <p><strong>Shard Price:</strong> {shardPrice.toFixed(4)} ETH</p>
+      </div>
+
+      {/* Referral Dashboard */}
+      {isConnected && (
+        <div className="form-section">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0 }}>🔗 Referral Program</h3>
+            <button onClick={() => setShowReferralProgramModal(true)} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+              Details
+            </button>
+          </div>
+          
+          {/* Referral Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2e7d32' }}>{accurateReferralStats.successfulRewards}</div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>Successful Rewards</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2e7d32' }}>{accurateReferralStats.rewardsEarned}</div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>Rewards Earned</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2e7d32' }}>{accurateReferralStats.rewardsAvailable}</div>
+              <div style={{ fontSize: '0.9rem', color: '#666' }}>Rewards Available</div>
+            </div>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Your Referral Link</label>
+            <div className="flex-row">
+              <input 
+                type="text" 
+                value={referralLink}
+                readOnly 
+                className="referral-input"
+                style={{ flex: 1 }}
+              />
+              <button onClick={copyReferralLink} className="btn-success">Copy Link</button>
+            </div>
+            <p className="small-text">
+              Share this link with friends. When they mint a Full KNYT, you'll receive a free Shard! ({accurateReferralStats.rewardsAvailable} rewards remaining)
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Owner Interface for Referral Processing */}
+      {address && address.toLowerCase() === '0xa88242692608e3e3e207e284fbdd55250aef9a54' && (
+        <div style={{ 
+          marginTop: '2rem', 
+          padding: '1.5rem', 
+          backgroundColor: '#fff3e0', 
+          borderRadius: '8px', 
+          border: '2px solid #ff9800' 
+        }}>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#e65100' }}>🔧 Owner: Referral Processing</h3>
+          
+          <OwnerReferralInterface />
+        </div>
+      )}
+
+      {/* Reservation Form */
+      <div className="form-section">
+        <h2>Reserve Your Pass</h2>
+        
+        {/* Pass Type Selection */}
+        <div className="radio-group">
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Pass Type</label>
+          <div>
+            <label style={{ marginRight: '1rem' }}>
+              <input 
+                type="radio" 
+                name="passType" 
+                value="full" 
+                checked={passType === 'full'}
+                onChange={(e) => setPassType(e.target.value as 'full' | 'shard')}
+                style={{ marginRight: '0.5rem' }}
+              />
+              Full Pass ({fullPrice.toFixed(4)} ETH)
+            </label>
+            <label>
+              <input 
+                type="radio" 
+                name="passType" 
+                value="shard" 
+                checked={passType === 'shard'}
+                onChange={(e) => setPassType(e.target.value as 'full' | 'shard')}
+                style={{ marginRight: '0.5rem' }}
+              />
+              Shard ({shardPrice.toFixed(4)} ETH)
+            </label>
+          </div>
+        </div>
+
+        {/* Referral Code Input */}
+        {passType === 'full' && (
+          <div className="referral-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <h4 style={{ margin: 0 }}>🎁 Referral Rewards Limited</h4>
+              <button 
+                onClick={() => setShowRefereeDetailsModal(true)} 
+                className="btn-secondary" 
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+              >
+                Manual Entry
+              </button>
+            </div>
+            <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#555' }}>
+              If someone referred you, enter their wallet address below. Referral rewards may be limited.
+            </p>
+            <input 
+              type="text" 
+              placeholder="Enter referrer's wallet address (optional)"
+              value={referrerAddress}
+              onChange={(e) => setReferrerAddress(e.target.value)}
+              style={{ fontFamily: 'monospace' }}
+            />
+            {referrerAddress && !ethers.isAddress(referrerAddress) && (
+              <div className="referral-error show">
+                Please enter a valid Ethereum address
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Email Input */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="email">Email (optional)</label>
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="Enter your email for updates"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        
+        {/* Mint Button */}
+        <button 
+          onClick={handleMint}
+          className="btn-primary" 
+          disabled={!isConnected || !saleIsActive || isMinting}
+          style={{ width: '100%' }}
+        >
+          {!isConnected ? 'Connect Wallet First' :
+           !saleIsActive ? 'Sale Not Active' :
+           isMinting ? 'Minting...' :
+           `Mint ${passType === 'full' ? 'Full KNYT' : 'Shard KNYT'} (${passType === 'full' ? fullPrice : shardPrice} ETH)`}
+        </button>
+      </div>
+      
+      {/* Contract Info */}
+      <div className="contract-info">
+        <p>
+          Contract: <code>{process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}</code>
+        </p>
+        <p>Network: Sepolia Testnet</p>
+        <p style={{ marginTop: '0.5rem' }}>
+          Sale Status: <span style={{ fontWeight: 'bold' }}>
+            {saleIsActive ? 'Active' : 'Checking...'}
+          </span>
+        </p>
+        <p style={{ marginTop: '0.5rem' }}>
+          Available Full Passes: {fullSupplyRemaining} | 
+          Available Shards: {shardSupplyRemaining}
+        </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="btn-secondary" 
+          style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
+        >
+          🔄 Force Refresh Data
+        </button>
+      </div>
+
+      {/* Availability Modal */}
+      {showAvailabilityModal && (
+        <div className="modal-overlay" onClick={() => setShowAvailabilityModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Pass Availability</h2>
+              <button className="modal-close" onClick={() => setShowAvailabilityModal(false)}>×</button>
+            </div>
+            <div className="modal-content">
+              <div className="supply-grid">
+                <div className="supply-item">
+                  <span className="supply-number">{fullSupplyRemaining}</span>
+                  <div className="supply-label">Full Passes Available</div>
+                </div>
+                <div className="supply-item">
+                  <span className="supply-number">{shardSupplyRemaining}</span>
+                  <div className="supply-label">Shard Passes Available</div>
+                </div>
+              </div>
+              
+              <h3>Pricing Information</h3>
+              <p><strong>Full Pass:</strong> {fullPrice.toFixed(4)} ETH</p>
+              <p><strong>Shard Pass:</strong> {shardPrice.toFixed(4)} ETH</p>
+              
+              <h3>Pass Details</h3>
+              <p><strong>Full KNYT:</strong> Complete ownership of 1 of the 18 Full KNYTs available for sale. Enables referral rewards when purchased with referrer.</p>
+              <p><strong>Shard KNYT:</strong> Fractional ownership (1/21st) of a Full KNYT. 21 Shards available for direct purchase, plus 18 available as referral rewards.</p>
+              
+              <h3>21 Sats KNYT System</h3>
+              <p><strong>Total Supply:</strong> 21 Full KNYTs conceptually</p>
+              <p><strong>18 Full KNYTs:</strong> Available for direct purchase</p>
+              <p><strong>2 Full KNYTs:</strong> Fractionalized into 42 Shard KNYTs (21 shards each)</p>
+              <p><strong>1 Full KNYT:</strong> Retained by project</p>
+              
+              <h3>Sale Status</h3>
+              <p>Current Status: <strong>{saleIsActive ? 'Active' : 'Inactive'}</strong></p>
+              <p>Network: Sepolia Testnet</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Referral Program Modal */}
+      {showReferralProgramModal && (
+        <div className="modal-overlay" onClick={() => setShowReferralProgramModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Referral Program Details</h2>
+              <button className="modal-close" onClick={() => setShowReferralProgramModal(false)}>×</button>
+            </div>
+            <div className="modal-content">
+              <h3>The Complete Flow:</h3>
+              <ol>
+                <li><strong>User A gets their referral link from the dashboard</strong></li>
+                <li><strong>User A shares link with User B</strong></li>
+                <li><strong>User B visits link OR manually enters User A's address</strong></li>
+                <li><strong>User B mints Full KNYT → User A instantly receives Shard reward</strong></li>
+              </ol>
+
+              <h3>How It Works</h3>
+              <ul>
+                <li>Share your unique referral link with friends</li>
+                <li>When someone uses your link and mints a <strong>Full KNYT</strong>, you receive a free <strong>Shard KNYT</strong></li>
+                <li>Referral rewards are issued instantly upon successful minting</li>
+                <li>Only Full KNYT purchases generate referral rewards</li>
+                <li>Shard KNYT purchases do not generate referral rewards</li>
+                <li><strong>Limited to 18 total referral rewards</strong> from the dedicated referral shard pool</li>
+              </ul>
+
+              <h3>Referral Link</h3>
+              <p>Your personalized referral link contains your wallet address and automatically fills the referrer field for new users.</p>
+              
+              <h3>Manual Entry</h3>
+              <p>Users can also manually enter a referrer's wallet address during the minting process if they don't have a referral link.</p>
+
+              <h3>Rewards Tracking</h3>
+              <p>All referral rewards are tracked on-chain and visible in your wallet immediately after issuance.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Referee Details Manual Entry Modal */}
+      {showRefereeDetailsModal && (
+        <div className="modal-overlay" onClick={() => setShowRefereeDetailsModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Manual Referrer Entry</h2>
+              <button className="modal-close" onClick={() => setShowRefereeDetailsModal(false)}>×</button>
+            </div>
+            <div className="modal-content">
+              <h3>Enter Referrer Details</h3>
+              <p>If someone referred you to mint a Full Pass but you don't have their referral link, you can manually enter their wallet address here.</p>
+              
+              <div style={{ margin: '1.5rem 0' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Referrer's Wallet Address
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="0x..."
+                  value={referrerAddress}
+                  onChange={(e) => setReferrerAddress(e.target.value)}
+                  style={{ fontFamily: 'monospace', width: '100%' }}
+                />
+                {referrerAddress && !ethers.isAddress(referrerAddress) && (
+                  <div style={{ color: '#d32f2f', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                    Please enter a valid Ethereum address
+                  </div>
+                )}
+              </div>
+
+              <h3>Important Notes</h3>
+              <ul>
+                <li>The referrer must be a valid Ethereum wallet address</li>
+                <li>The referrer will receive a free Shard Pass when you mint a Full Pass</li>
+                <li>Referral rewards are limited and may not always be available</li>
+                <li>Double-check the address to ensure your referrer receives their reward</li>
+              </ul>
+
+              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                <button 
+                  onClick={() => setShowRefereeDetailsModal(false)} 
+                  className="btn-primary"
+                  style={{ marginRight: '1rem' }}
+                >
+                  Save & Continue
+                </button>
+                <button 
+                  onClick={() => {
+                    setReferrerAddress('');
+                    setShowRefereeDetailsModal(false);
+                  }} 
+                  className="btn-secondary"
+                >
+                  Clear & Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

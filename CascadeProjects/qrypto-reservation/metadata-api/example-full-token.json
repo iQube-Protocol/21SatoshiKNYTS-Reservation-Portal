@@ -1,0 +1,20 @@
+{
+  "name": "Satoshi KNYT #1",
+  "description": "Full ownership of Satoshi KNYT #1, part of the exclusive collection of 21 Satoshi KNYTs.",
+  "image": "https://api.21sats.com/images/full/1.png",
+  "external_url": "https://21sats.com/token/1",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Full"
+    },
+    {
+      "trait_type": "Edition",
+      "value": "Genesis"
+    },
+    {
+      "trait_type": "Satoshi Number",
+      "value": 1
+    }
+  ]
+}
