@@ -797,11 +797,13 @@ export default function Home() {
       const [
         fullMinted,
         shardMinted,
-        referralShardsMinted
+        referralShardsMinted,
+        saleActive
       ] = await Promise.all([
         contract.fullMinted(),
         contract.shardMinted(),
-        contract.referralShardsMinted()
+        contract.referralShardsMinted(),
+        contract.saleIsActive()
       ]);
       
       const contractState = {
@@ -820,8 +822,10 @@ export default function Home() {
       console.log('Regular Shards Minted:', contractState.shardsMinted);
       console.log('Referral Shards Minted:', contractState.referralShardsMinted);
       console.log('TOTAL TOKENS MINTED:', contractState.fullMinted + contractState.shardsMinted + contractState.referralShardsMinted);
+      console.log('🚀 SALE STATUS:', saleActive ? 'ACTIVE' : 'INACTIVE');
       
       setContractData(contractState);
+      setSaleIsActive(saleActive);
       
       // NEW: Load user token balance from blockchain
       if (address) {
@@ -2216,21 +2220,92 @@ export default function Home() {
                   
                   <button
                     onClick={() => {
-                      const jsonData = prompt('📋 Paste your referral data JSON here:\n\n(Copy from the clipboard export and paste below)');
-                      if (jsonData) {
-                        try {
-                          const importedData = JSON.parse(jsonData);
-                          if (Array.isArray(importedData)) {
-                            localStorage.setItem('referralData', JSON.stringify(importedData));
-                            alert(`✅ Successfully imported ${importedData.length} referral records!\n\nPage will refresh to show imported data.`);
-                            setTimeout(() => window.location.reload(), 1000);
-                          } else {
-                            alert('❌ Invalid data format. Please ensure you pasted valid JSON data.');
+                      console.log('🔄 Paste Import button clicked');
+                      
+                      // Create a modal-like overlay for stable paste input
+                      const overlay = document.createElement('div');
+                      overlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.8);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      `;
+                      
+                      const modal = document.createElement('div');
+                      modal.style.cssText = `
+                        background: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        width: 80%;
+                        max-width: 600px;
+                        max-height: 80%;
+                      `;
+                      
+                      modal.innerHTML = `
+                        <h3 style="margin-top: 0;">📋 Import Referral Data</h3>
+                        <p>Paste your referral data JSON below:</p>
+                        <textarea id="pasteArea" style="width: 100%; height: 200px; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px;" placeholder="Paste your JSON data here..."></textarea>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                          <button id="cancelBtn" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                          <button id="importBtn" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Import</button>
+                        </div>
+                      `;
+                      
+                      overlay.appendChild(modal);
+                      document.body.appendChild(overlay);
+                      
+                      const textarea = document.getElementById('pasteArea');
+                      const cancelBtn = document.getElementById('cancelBtn');
+                      const importBtn = document.getElementById('importBtn');
+                      
+                      // Focus the textarea for immediate pasting
+                      setTimeout(() => textarea.focus(), 100);
+                      
+                      cancelBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                        console.log('❌ Import cancelled by user');
+                      };
+                      
+                      importBtn.onclick = () => {
+                        const jsonData = textarea.value.trim();
+                        console.log('📋 User provided data:', jsonData ? 'Data provided' : 'No data provided');
+                        
+                        if (jsonData) {
+                          try {
+                            const importedData = JSON.parse(jsonData);
+                            console.log('📊 Parsed data:', importedData);
+                            if (Array.isArray(importedData)) {
+                              localStorage.setItem('referralData', JSON.stringify(importedData));
+                              console.log('✅ Data saved to localStorage');
+                              document.body.removeChild(overlay);
+                              alert(`✅ Successfully imported ${importedData.length} referral records!\n\nPage will refresh to show imported data.`);
+                              setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                              console.log('❌ Data is not an array:', typeof importedData);
+                              alert('❌ Invalid data format. Please ensure you pasted valid JSON data.');
+                            }
+                          } catch (error) {
+                            console.log('❌ JSON parse error:', error);
+                            alert('❌ Invalid JSON format. Please check the pasted data and try again.');
                           }
-                        } catch (error) {
-                          alert('❌ Invalid JSON format. Please check the pasted data and try again.');
+                        } else {
+                          alert('❌ Please paste some data before importing.');
                         }
-                      }
+                      };
+                      
+                      // Allow Escape key to close
+                      overlay.onkeydown = (e) => {
+                        if (e.key === 'Escape') {
+                          document.body.removeChild(overlay);
+                          console.log('❌ Import cancelled with Escape key');
+                        }
+                      };
                     }}
                     style={{
                       backgroundColor: '#fd7e14',
