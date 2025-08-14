@@ -1,0 +1,146 @@
+
+> qrypto-reservation@0.1.0 dev
+> next dev
+
+[32mready[39m - started server on 0.0.0.0:3000, url: http://localhost:3000
+[36minfo[39m  - Loaded env from /Users/hal1/CascadeProjects/qrypto-reservation/.env.local
+[36minfo[39m  - Loaded env from /Users/hal1/CascadeProjects/qrypto-reservation/.env
+[33mwarn[39m  - [1mYou have enabled experimental feature (esmExternals) in next.config.js.[22m
+[33mwarn[39m  - Experimental features are not covered by semver, and may cause unexpected or broken application behavior. Use at your own risk.
+
+[35mevent[39m - compiled client and server successfully in 4.7s (163 modules)
+[36mwait[39m  - compiling / (client and server)...
+[35mevent[39m - compiled client and server successfully in 1528 ms (316 modules)
+[36mwait[39m  - compiling /_error (client and server)...
+[35mevent[39m - compiled client and server successfully in 356 ms (317 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 6.7s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 5.4s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1482 ms (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 3.3s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 7.8s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 2.5s (316 modules)
+[36minfo[39m  - Loaded env from /Users/hal1/CascadeProjects/qrypto-reservation/.env.local
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 2.3s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1722 ms (316 modules)
+[36mwait[39m  - compiling /_error (client and server)...
+[35mevent[39m - compiled client and server successfully in 938 ms (317 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 4.9s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1531 ms (316 modules)
+[36mwait[39m  - compiling /_error (client and server)...
+[35mevent[39m - compiled client and server successfully in 620 ms (317 modules)
+[36mwait[39m  - compiling...
+[31merror[39m - ./pages/index.tsx
+Error: 
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:722:1]
+ [2m722[0m |     } finally {
+ [2m723[0m |       setIsMinting(false);
+ [2m724[0m |     }
+ [2m725[0m |   };
+     : [31;1m   ^[0m
+ [2m726[0m | 
+ [2m727[0m |   // Copy referral link to clipboard
+ [2m728[0m |   const copyReferralLink = () => {
+     `----
+
+  [31mx[0m Expected '}', got '<eof>'
+      ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:1608:1]
+ [2m1608[0m |       )}
+ [2m1609[0m |     </div>
+ [2m1610[0m |   );
+ [2m1611[0m | }
+      : [31;1m^[0m
+      `----
+
+Caused by:
+    0: error was recoverable, but proceeding would result in wrong codegen
+    1: Syntax Error
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 3.1s (316 modules)
+[36mwait[39m  - compiling...
+[31merror[39m - ./pages/index.tsx
+Error: 
+  [31mx[0m Expected ',', got 'string literal (name, "name")'
+    ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:59:1]
+ [2m59[0m |     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+ [2m60[0m |     "stateMutability": "view",
+ [2m61[0m |     "type": "function"
+ [2m62[0m |     "name": "mintFull",
+    : [31;1m    ^^^^^^[0m
+ [2m63[0m |     "outputs": [],
+ [2m64[0m |     "stateMutability": "payable",
+ [2m65[0m |     "type": "function"
+    `----
+
+Caused by:
+    Syntax Error
+[36mwait[39m  - compiling...
+[31merror[39m - ./pages/index.tsx
+Error: 
+  [31mx[0m Expected ',', got 'string literal (name, "name")'
+    ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:59:1]
+ [2m59[0m |     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+ [2m60[0m |     "stateMutability": "view",
+ [2m61[0m |     "type": "function"
+ [2m62[0m |     "name": "mintFull",
+    : [31;1m    ^^^^^^[0m
+ [2m63[0m |     "outputs": [],
+ [2m64[0m |     "stateMutability": "payable",
+ [2m65[0m |     "type": "function"
+    `----
+
+Caused by:
+    Syntax Error
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1400 ms (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1673 ms (316 modules)
+[36mwait[39m  - compiling...
+[31merror[39m - ./pages/index.tsx
+Error: 
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:406:1]
+ [2m406[0m |         
+ [2m407[0m |         console.log(`✅ Synced ${blockchainData.length} referrals from blockchain`);
+ [2m408[0m |         alert(`Successfully synced ${blockchainData.length} referrals from blockchain!`);
+ [2m409[0m |       } else {
+     : [31;1m        ^[0m
+ [2m410[0m |         console.log('ℹ️ No additional referral data found on blockchain');
+ [2m411[0m |         alert('No additional referral data found on blockchain');
+ [2m412[0m |       }
+     `----
+
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/hal1/CascadeProjects/qrypto-reservation/pages/index.tsx[0m:406:1]
+ [2m406[0m |         
+ [2m407[0m |         console.log(`✅ Synced ${blockchainData.length} referrals from blockchain`);
+ [2m408[0m |         alert(`Successfully synced ${blockchainData.length} referrals from blockchain!`);
+ [2m409[0m |       } else {
+     : [31;1m        ^^^^[0m
+ [2m410[0m |         console.log('ℹ️ No additional referral data found on blockchain');
+ [2m411[0m |         alert('No additional referral data found on blockchain');
+ [2m412[0m |       }
+     `----
+
+Caused by:
+    Syntax Error
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 2.1s (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 864 ms (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 1459 ms (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 722 ms (316 modules)
+[36mwait[39m  - compiling...
+[35mevent[39m - compiled client and server successfully in 6.8s (316 modules)

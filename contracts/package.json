@@ -1,0 +1,23 @@
+{
+  "name": "qrypto-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Qrypto Reservation Pass",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js --network goerli",
+    "clean": "rm -rf node_modules && rm -rf artifacts && rm -rf cache"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.0.3",
+    "hardhat": "^2.17.0",
+    "ethers": "^6.0.0"
+  }
+}

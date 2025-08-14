@@ -1,0 +1,11 @@
+{
+  "name": "activation-tool",
+  "version": "1.0.0",
+  "description": "Tool to activate sales on 21 Sats contract",
+  "main": "activate-sale.js",
+  "type": "module",
+  "dependencies": {
+    "ethers": "^6.7.1",
+    "dotenv": "^16.3.1"
+  }
+}
