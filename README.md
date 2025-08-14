@@ -2,6 +2,15 @@
 
 This is the reservation portal for the 21 Sats Project, allowing users to mint ERC-721 NFTs that will later be swapped to Bitcoin Ordinals/BRC-721.
 
+## Branch Strategy
+
+This repository uses the following branch strategy:
+
+- **`staging`**: Stable version with fully restored owner panel functionality. This branch should be considered the production-ready code.
+- **`dev`**: Development branch for ongoing work and new features. All new development should happen here to avoid risking the stable version.
+
+When features in the `dev` branch are fully tested and ready for production, they can be merged into the `staging` branch.
+
 ## Recent Updates (v2.2.0 - PRODUCTION READY)
 
 - ✅ **COMPLETE SOLUTION**: Fixed sale status display by adding contract.saleIsActive() check
