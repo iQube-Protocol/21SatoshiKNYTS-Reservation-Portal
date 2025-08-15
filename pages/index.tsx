@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import RightPanel21Sats from '../components/RightPanel21Sats';
 
 // Contract ABI for the 21 Sats KNYT system
 const KNYT_CONTRACT_ABI = [
@@ -704,9 +705,40 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
-      checkWalletConnection();
-    }
+    const checkForEthereumProvider = async () => {
+      console.log('Checking for ethereum provider...');
+      
+      // Check if window is defined (client-side)
+      if (typeof window === 'undefined') {
+        console.log('Window not defined, likely server-side rendering');
+        return;
+      }
+      
+      // Log browser details to help debug Chromium issues
+      console.log('User Agent:', navigator.userAgent);
+      
+      // Check for ethereum provider
+      if ((window as any).ethereum) {
+        console.log('Ethereum provider found directly in window');
+        checkWalletConnection();
+      } else {
+        console.log('No ethereum provider found in window initially');
+        
+        // Some browsers (especially Chromium) might delay injecting ethereum
+        // Wait a bit and try again
+        setTimeout(() => {
+          console.log('Checking again after timeout...');
+          if ((window as any).ethereum) {
+            console.log('Ethereum provider found after delay');
+            checkWalletConnection();
+          } else {
+            console.log('Still no ethereum provider after delay');
+          }
+        }, 1000);
+      }
+    };
+    
+    checkForEthereumProvider();
   }, []);
 
   useEffect(() => {
@@ -725,11 +757,15 @@ export default function Home() {
   const checkWalletConnection = async () => {
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       try {
+        console.log('Requesting accounts from ethereum provider');
         const accounts = await (window as any).ethereum.request({ method: 'eth_accounts' });
+        console.log('Accounts received:', accounts);
         if (accounts.length > 0) {
+          console.log('Account found, creating provider and signer');
           const provider = new ethers.BrowserProvider((window as any).ethereum);
           const signer = await provider.getSigner();
           const address = await signer.getAddress();
+          console.log('Wallet connected with address:', address);
           
           setProvider(provider);
           setSigner(signer);
@@ -750,12 +786,18 @@ export default function Home() {
   };
 
   const connectWallet = async () => {
+    console.log('Connect wallet button clicked');
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       try {
+        console.log('Requesting accounts from ethereum provider');
         await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('Creating provider from ethereum');
         const provider = new ethers.BrowserProvider((window as any).ethereum);
+        console.log('Getting signer from provider');
         const signer = await provider.getSigner();
+        console.log('Getting address from signer');
         const address = await signer.getAddress();
+        console.log('Wallet connected with address:', address);
         
         setProvider(provider);
         setSigner(signer);
@@ -773,6 +815,7 @@ export default function Home() {
         loadContractData();
       } catch (error) {
         console.error('Error connecting wallet:', error);
+        alert('Error connecting wallet: ' + (error.message || 'Unknown error'));
       }
     } else {
       alert('Please install MetaMask!');
@@ -1105,12 +1148,24 @@ export default function Home() {
   return (
     <div style={{ 
       fontFamily: 'Arial, sans-serif',
-      maxWidth: '600px',
+      maxWidth: '1400px',
       margin: '0 auto',
       padding: '20px',
       backgroundColor: '#f5f5f5',
       minHeight: '100vh'
     }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '30px',
+        flexWrap: 'wrap'
+      }}>
+        {/* Left Column */}
+        <div style={{
+          flex: '1',
+          minWidth: '400px',
+          maxWidth: '600px'
+        }}>
       
       {/* Persistent Notification */}
       {mounted && showNotification && (
@@ -2326,6 +2381,17 @@ export default function Home() {
           )}
         </div>
       )}
+        </div>
+        
+        {/* Right Column */}
+        <div style={{
+          flex: '1',
+          minWidth: '400px',
+          maxWidth: '600px'
+        }}>
+          <RightPanel21Sats />
+        </div>
+      </div>
     </div>
   );
 }
